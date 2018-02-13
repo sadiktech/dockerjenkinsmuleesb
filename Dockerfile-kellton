@@ -1,0 +1,46 @@
+FROM java:openjdk-8-jdk
+MAINTAINER Sadik Ali (Kellton tech solution)
+ENV MULE_HOME /opt/mule
+#Add Mule runtime in Docker Container
+CMD echo "------ Add Mule runtime in Docker Container --------"
+RUN  set -x \
+		  && cd /opt \ 	
+		  && curl -o mule-standalone-3.9.0.zip https://repository.mulesoft.org/nexus/content/repositories/releases/org/mule/distributions/mule-standalone/3.9.0/mule-standalone-3.9.0.zip \
+		  && unzip mule-standalone-3.9.0.zip \
+		  && mv mule-standalone-3.9.0 mule \
+		  && rm mule-standalone-3.9.0.zip
+
+		  
+#Adding Work Directory
+CMD echo "------ Adding Work Directory --------"
+WORKDIR $MULE_HOME
+
+# Define mount points
+VOLUME ["$MULE_HOME/apps","VOLUME $MULE_HOME/conf","VOLUME $MULE_HOME/domains","VOLUME $MULE_HOME/logs"]
+
+#Copy and deploy mule application in runtime
+CMD echo "------ Deploying mule application in runtime ! --------"
+COPY  dockerjenkinsmuleesb.zip $MULE_HOME/apps/
+RUN ls -ltr $MULE_HOME/apps/
+
+# HTTP Service Port
+# Expose the necessary port ranges as required by the Mule Apps
+EXPOSE      8081-8082
+EXPOSE      9000
+EXPOSE      9082
+
+# Mule remote debugger
+EXPOSE      5000
+
+# Mule JMX port (must match Mule config file)
+EXPOSE      1098
+
+# Mule MMC agent port
+EXPOSE      7777
+
+# AMC agent port
+EXPOSE      9997
+
+# Start Mule runtime
+CMD echo "------ Start Mule runtime --------"
+ENTRYPOINT ["./bin/mule"]
